@@ -20,5 +20,9 @@
 #endif
 
 #if CONFIG_AUTO == CONFIG_AUTO_NONE
+#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+  #define FORMAT_STATUS_AUTO_NONE "temp:%d, pwm:%u/%u, rpm:%u\n"
+#else
   #define FORMAT_STATUS_AUTO_NONE "temp:%d, pwm:%u/%u\n"
+#endif
 #endif

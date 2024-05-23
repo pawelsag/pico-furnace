@@ -676,6 +676,17 @@ static int
 format_status(char* buffer, furnace_context_t* ctx)
 {
 #if CONFIG_AUTO == CONFIG_AUTO_NONE
+#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+  return snprintf(
+      buffer,
+      FORMAT_STATUS_AUTO_NONE_SIZE,
+      FORMAT_STATUS_AUTO_NONE,
+      ctx->cur_temp,
+      ctx->pwm_level,
+      MAX_PWM,
+      current_rpm
+      );
+#else
   return snprintf(
       buffer,
       FORMAT_STATUS_AUTO_NONE_SIZE,
@@ -684,6 +695,7 @@ format_status(char* buffer, furnace_context_t* ctx)
       ctx->pwm_level,
       MAX_PWM
       );
+#endif
 #else
     return snprintf(
       buffer,
@@ -1028,9 +1040,6 @@ main_work_loop(void)
     // used only in automatic mode with timer
     const bool spin_coater_throttle_value_update_deadline = now > ctx->spin_coater_throttle_value_update_deadline;
     do_spin_coater_throttle_value_update(ctx, spin_coater_throttle_value_update_deadline);
-
-    const bool spin_coater_rpm_log_deadline = now > ctx->spin_coater_rpm_log_deadline;
-    do_spin_coater_rpm_log_update(ctx, spin_coater_rpm_log_deadline);
 
 #endif
   }

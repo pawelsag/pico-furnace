@@ -9,6 +9,17 @@ static uint32_t count_of_measurements;
 static uint32_t last_time;
 static uint32_t current_rpm;
 
+#define ENDLESS_ARR_ELEMENTS 200
+int endless_arr_last_ins_element = 0;
+unsigned int endless_arr[ENDLESS_ARR_ELEMENTS];
+
+static
+void inster_to_array(unsigned int val)
+{
+  endless_arr[endless_arr_last_ins_element] = val;
+}
+
+
 void
 rpm_feedback_irq_handler(unsigned int gpio, uint32_t events)
 {
@@ -71,13 +82,13 @@ timer_spin_callback(alarm_id_t id, void* user_data)
 static inline int
 scale_dshot_value_when_speeding(furnace_context_t* ctx, int rpm_left, int bias)
 {
-    return (50.0 / ctx->spin_coater.set_rpm) * rpm_left + bias;
+    return (15.0 / ctx->spin_coater.set_rpm) * rpm_left + (bias%2);
 }
 
 static inline int
 scale_dshot_value_when_stopping(furnace_context_t* ctx, int rpm_left)
 {
-    return 50.0 - (50.0 / ctx->spin_coater.set_rpm) * rpm_left;
+    return 15.0 - (15.0 / ctx->spin_coater.set_rpm) * rpm_left;
 }
 
 static absolute_time_t
@@ -90,17 +101,15 @@ do_dshot_smooth_transition(furnace_context_t* ctx)
     if(rpm_diff_abs > 300){
       ctx->spin_coater.dshot_throttle_val += scale_dshot_value_when_speeding(ctx,
                                                                             rpm_diff_abs,
-                                                                            10*(current_rpm/(double)(ctx->spin_coater.set_rpm)))*direction;
+                                                                            (current_rpm/(double)(ctx->spin_coater.set_rpm)))*direction;
     }
-    else if (rpm_diff_abs > 100 )
-      ctx->spin_coater.dshot_throttle_val += 4*direction;
     else if (rpm_diff_abs > 50 )
       ctx->spin_coater.dshot_throttle_val += 1*direction;
     else;
     next_delay = make_timeout_time_ms(ctx->spin_coater.rpm_speedup_update_delay);
   }
   else if(SPIN_SMOOTH_STOP_REQUESTED == ctx->spin_coater.spin_state) {
-    ctx->spin_coater.dshot_throttle_val -= scale_dshot_value_when_stopping(ctx, rpm_diff_abs);
+    ctx->spin_coater.dshot_throttle_val -= 5;
       if(rpm_diff_abs > (ctx->spin_coater.set_rpm - 250) || ctx->spin_coater.dshot_throttle_val < SPIN_COATER_MIN_THROTTLE_COMMAND) {
         ctx->spin_coater.dshot_throttle_val = SPIN_COATER_MIN_THROTTLE_COMMAND;
         ctx->spin_coater.spin_state = SPIN_IDLE;
@@ -124,28 +133,6 @@ do_pwm_smooth_transition(furnace_context_t* ctx)
   return make_timeout_time_ms(100);
 }
 #endif
-
-static void
-do_spin_coater_rpm_log_update(furnace_context_t *ctx, bool deadline_met)
-{
-  const char* rpm_str = "rpm: %u\r\n";
-  char send_buf[BUF_SIZE];
-
-  if (deadline_met && ctx->spin_coater.spin_state != SPIN_IDLE) {
-    int number_of_chars =
-      snprintf(send_buf,
-               sizeof(send_buf),
-               rpm_str,
-               current_rpm);
-
-    tcp_server_send_data(ctx,
-                         ctx->tcp.client_pcb,
-                         (const uint8_t*)send_buf,
-                         number_of_chars);
-
-    ctx->spin_coater_rpm_log_deadline = make_timeout_time_ms(300);
-  }
-}
 
 static void
 do_spin_coater_throttle_value_update(furnace_context_t *ctx, bool deadline_met)
