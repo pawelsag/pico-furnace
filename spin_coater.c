@@ -25,7 +25,8 @@ rpm_feedback_irq_handler(unsigned int gpio, uint32_t events)
 
   const uint32_t current_time_us = time_us_32();
   const uint32_t time_elapsed_us = current_time_us - last_time;
-  current_rpm = (MICROSECONDS_PER_MINUTE / time_elapsed_us);
+  if((MICROSECONDS_PER_MINUTE / time_elapsed_us) < current_rpm + 1000)
+    current_rpm = (MICROSECONDS_PER_MINUTE / time_elapsed_us);
   count_of_measurements = 0;
 }
 #if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
@@ -86,12 +87,16 @@ do_dshot_smooth_transition(furnace_context_t* ctx)
   int rpm_diff_abs = abs(ctx->spin_coater.set_rpm - current_rpm);
   absolute_time_t next_delay;
   if(SPIN_STARTED_WITH_TIMER == ctx->spin_coater.spin_state) {
-    if(rpm_diff_abs > 100)
+    if(rpm_diff_abs > 300){
       ctx->spin_coater.dshot_throttle_val += scale_dshot_value_when_speeding(ctx,
                                                                             rpm_diff_abs,
                                                                             10*(current_rpm/(double)(ctx->spin_coater.set_rpm)))*direction;
-    else if (rpm_diff_abs > 10 )
+    }
+    else if (rpm_diff_abs > 100 )
+      ctx->spin_coater.dshot_throttle_val += 4*direction;
+    else if (rpm_diff_abs > 50 )
       ctx->spin_coater.dshot_throttle_val += 1*direction;
+    else;
     next_delay = make_timeout_time_ms(ctx->spin_coater.rpm_speedup_update_delay);
   }
   else if(SPIN_SMOOTH_STOP_REQUESTED == ctx->spin_coater.spin_state) {

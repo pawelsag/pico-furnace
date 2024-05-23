@@ -299,6 +299,7 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
         DEBUG_printf("Chaning dshot value failed\n");
         return;
       }
+      ctx->spin_coater.set_rpm = 6000;
 
       if (arg == SPIN_COATER_MIN_THROTTLE_COMMAND) {
         ctx->spin_coater.spin_state = SPIN_IDLE;
@@ -346,11 +347,11 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
       return;
     }
 #elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
-  const int ret = set_dshot_safe(ctx, SPIN_COATER_MIN_THROTTLE_COMMAND);
-  if (ret) {
-    DEBUG_printf("Chaning dshot value failed\n");
-    return;
-  }
+ // const int ret = set_dshot_safe(ctx, SPIN_COATER_MIN_THROTTLE_COMMAND);
+ // if (ret) {
+ //   DEBUG_printf("Chaning dshot value failed\n");
+ //   return;
+ // }
 #endif
     ctx->spin_coater.spin_state = SPIN_SMOOTH_STOP_REQUESTED;
     cancel_alarm(ctx->spin_coater.timer_id);
