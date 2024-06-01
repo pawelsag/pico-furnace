@@ -40,7 +40,7 @@ rpm_feedback_irq_handler(unsigned int gpio, uint32_t events)
     current_rpm = (MICROSECONDS_PER_MINUTE / time_elapsed_us);
   count_of_measurements = 0;
 }
-#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
 int
 set_dshot_safe(furnace_context_t *ctx, unsigned dshot)
 {
@@ -78,7 +78,7 @@ timer_spin_callback(alarm_id_t id, void* user_data)
   return 0;
 }
 
-#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
 static inline int
 scale_dshot_value_when_speeding(furnace_context_t* ctx, int rpm_left, int bias)
 {
@@ -138,11 +138,12 @@ static void
 do_spin_coater_throttle_value_update(furnace_context_t *ctx, bool deadline_met)
 {
     if (deadline_met) {
+        printf("DSHOT RPM -> %d\n", dshot_recv_telemetry());
         if ((ctx->spin_coater.spin_state == SPIN_STARTED_WITH_TIMER) ||
             (ctx->spin_coater.spin_state == SPIN_SMOOTH_STOP_REQUESTED)) {
 #if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_PWM
         ctx->spin_coater_throttle_value_update_deadline = do_pwm_smooth_transition(ctx);
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
         ctx->spin_coater_throttle_value_update_deadline = do_dshot_smooth_transition(ctx);
 #endif
         } else {
@@ -170,7 +171,7 @@ init_spin_coater(furnace_context_t *ctx)
   // Set initial B output high for three cycles before dropping
   // Set the PWM running
   pwm_set_enabled(slice_num, true);
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
     dshot_init(CONFIG_SPIN_COATER_ENGINE_CONTROL_PIN);
     dshot_send_command(SPIN_COATER_MIN_THROTTLE_COMMAND);
 #endif
@@ -178,7 +179,7 @@ init_spin_coater(furnace_context_t *ctx)
 #if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_PWM
   ctx->spin_coater.pwm_slice_num = slice_num;
   ctx->spin_coater.pwm_duty = PWM_IDLE_DUTY;
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
   ctx->spin_coater.dshot_throttle_val = SPIN_COATER_MIN_THROTTLE_COMMAND;
 #endif
   ctx->spin_coater.set_rpm = 0;

@@ -1,15 +1,15 @@
 #pragma once
 
 #if CONFIG_SPIN_COATER
-#if CONFIG_SPIN_COATER != CONFIG_SPIN_COATER_DSHOT && CONFIG_SPIN_COATER != CONFIG_SPIN_COATER_PWM
-#error "Invalid spin coater value type specified. Either 'dshot' or 'pwm' has to be enabled"
+#if CONFIG_SPIN_COATER != CONFIG_SPIN_COATER_DSHOT && CONFIG_SPIN_COATER != CONFIG_SPIN_COATER_BIDIR_DSHOT && CONFIG_SPIN_COATER != CONFIG_SPIN_COATER_PWM
+#error "Invalid spin coater value type specified. Either 'dshot', 'bidshot' or 'pwm' has to be enabled"
 #endif
 #endif
 
 #include <stdint.h>
 #include <stdio.h>
 #include "pico/time.h"
-#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
 #include "spin_coater_dshot.h"
 #elif CONFIG_SPIN_COATER ==  CONFIG_SPIN_COATER_PWM
 #include "spin_coater_pwm.h"
@@ -30,7 +30,7 @@ typedef struct
 #if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_PWM
   uint32_t pwm_duty;
   unsigned int pwm_slice_num;
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
   uint32_t dshot_throttle_val;
 #endif
   uint32_t rpm_speedup_update_delay;

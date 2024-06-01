@@ -1,8 +1,11 @@
 #pragma once
 
 #include <stdint.h>
+#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
 #include "dshot_encoder.pio.h"
-
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
+#include "dshot_bdir_encoder.pio.h"
+#endif
 #define SPIN_COATER_MIN_THROTTLE_COMMAND dshot_encoder_MIN_THROTTLE_VALUE
 #define SPIN_COATER_MAX_THROTTLE_COMMAND dshot_encoder_MAX_THROTTLE_VALUE
 /* Normaly IDLE state for the engine is SPIN_COATER_MIN_THROTTLE_COMMAND dshot value
@@ -14,3 +17,8 @@
 bool dshot_init(uint16_t dshot_gpio);
 
 void dshot_send_command(uint16_t c);
+
+#if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
+uint32_t
+dshot_recv_telemetry();
+#endif

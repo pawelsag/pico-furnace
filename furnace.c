@@ -284,7 +284,7 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
         ctx->spin_coater.spin_state = SPIN_STARTED_WITH_FORCE_VALUE;
       }
   }
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
   else if (sscanf(buffer, "spin_dshot %u", &arg) == 1) {
       const int ret = set_dshot_safe(ctx, arg);
       if (ret) {
@@ -327,7 +327,7 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
     ctx->spin_coater.set_rpm = arg;
 #if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_PWM
     ctx->spin_coater.pwm_duty = PWM_HEAVY_LOADED_IDLE_DUTY;
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
     ctx->spin_coater.dshot_throttle_val = DSHOT_HEAVY_LOADED_IDLE_DUTY;
 #endif
     ctx->spin_coater.spin_state = SPIN_STARTED_WITH_TIMER;
@@ -346,7 +346,7 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
       DEBUG_printf("Chaning PWM duty failed\n");
       return;
     }
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
  // const int ret = set_dshot_safe(ctx, SPIN_COATER_MIN_THROTTLE_COMMAND);
  // if (ret) {
  //   DEBUG_printf("Chaning dshot value failed\n");
@@ -461,7 +461,7 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
 #if CONFIG_SPIN_COATER
 #if CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_PWM
                         "spin_pwm <val>        \t\t start spinning with given pwm value, can be <49, 98> \n"
-#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
                         "spin_dshot <val>      \t\t start spinning with given dshot value, can be <48, 2048> \n"
 #endif
                         "spin_start <rpm> <time>  \t set spinner in automatic mode.\n"
@@ -676,7 +676,7 @@ static int
 format_status(char* buffer, furnace_context_t* ctx)
 {
 #if CONFIG_AUTO == CONFIG_AUTO_NONE
-#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
+#if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
   return snprintf(
       buffer,
       FORMAT_STATUS_AUTO_NONE_SIZE,
@@ -1028,7 +1028,6 @@ main_work_loop(void)
 #if CONFIG_AUTO == CONFIG_AUTO_MAPPER
     do_mapper_work(ctx);
 #endif
-
     if (deadline_met)
       ctx->update_deadline = make_timeout_time_ms(1000);
 #if CONFIG_MAGNETRON
