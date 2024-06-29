@@ -61,7 +61,7 @@ dshot_send_command(uint16_t c)
   c = c << 1;
 
   // Shift and include checksum
-  uint16_t checksum = (c ^ (c >> 4) ^ (c >> 8)) & 0x0F;
+  uint16_t checksum = (~(c ^ (c >> 4) ^ (c >> 8))) & 0x0F;
   c = (c << 4) | checksum;
 
   pio_sm_put_blocking(pio, pio_sm, c);
