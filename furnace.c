@@ -299,10 +299,11 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
         DEBUG_printf("Chaning dshot value failed\n");
         return;
       }
-      ctx->spin_coater.set_rpm = 6000;
+
+      //ctx->spin_coater.set_rpm = 6000;
 
       if (arg == SPIN_COATER_MIN_THROTTLE_COMMAND) {
-        ctx->spin_coater.spin_state = SPIN_IDLE;
+        //ctx->spin_coater.spin_state = SPIN_IDLE;
         cancel_alarm(ctx->spin_coater.timer_id);
         const char msg[] = "spin coater stopped\r\n";
         feedback(msg, sizeof(msg)-1);
@@ -347,13 +348,13 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
       return;
     }
 #elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
- // const int ret = set_dshot_safe(ctx, SPIN_COATER_MIN_THROTTLE_COMMAND);
- // if (ret) {
- //   DEBUG_printf("Chaning dshot value failed\n");
- //   return;
- // }
+  const int ret = set_dshot_safe(ctx, SPIN_COATER_MIN_THROTTLE_COMMAND);
+  if (ret) {
+    DEBUG_printf("Chaning dshot value failed\n");
+    return;
+  }
 #endif
-    ctx->spin_coater.spin_state = SPIN_SMOOTH_STOP_REQUESTED;
+    //ctx->spin_coater.spin_state = SPIN_SMOOTH_STOP_REQUESTED;
     cancel_alarm(ctx->spin_coater.timer_id);
     const char msg[] = "spin stopped\r\n";
     feedback(msg, sizeof(msg)-1);
@@ -749,12 +750,12 @@ do_tcp_work(furnace_context_t *ctx, bool deadline_met)
   if (ctx->tcp.client_pcb && deadline_met) {
     const int temperature_str_len = format_status(temperature_str, ctx);
 
-    tcp_server_send_data(
-      ctx,
-      ctx->tcp.client_pcb,
-      (uint8_t*)temperature_str,
-      temperature_str_len
-    );
+   // tcp_server_send_data(
+   //   ctx,
+   //   ctx->tcp.client_pcb,
+   //   (uint8_t*)temperature_str,
+   //   temperature_str_len
+   // );
   }
 
 }

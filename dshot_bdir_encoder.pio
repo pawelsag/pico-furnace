@@ -29,6 +29,7 @@ init:
   ; grab MIN_THROTTLE  value from fifo and store it in scratch register
   pull block
   mov x, osr
+  set pins, 1
   jmp start_frame
 maybe_pull:
   pull noblock ; if fifo empty, mov osr, x will be automatically performed
@@ -50,15 +51,18 @@ do_zero:
   set pins, 1 [ZERO_LOW_DELAY]
   jmp transmit_or_receive
 receive_frame:
-  set pins, 1
   set y, READ_AFTER_SEND_DELAY_TIMES
 wait_for_frame:
   jmp y-- wait_for_frame [READ_AFTER_SEND_DELAY]
   set y, RECEIVED_PAYLOAD_LENGTH
-  nop [5] ; delay few bits to stabilize signal from ESC
+  nop [6] ; delay few bits to stabilize signal from ESC
 receive_telemetry:
   in pins, 1 ; read frame once frame become stable
   jmp y-- receive_telemetry [30] ; receive another bit after 2.66ns 30 + 1 + 1 == 32
+wait_for_esc:
+  set y, READ_AFTER_SEND_DELAY_TIMES; we need wait another 30 us after frame receiving to let ESC to switch to receving mode 
+wait_esc:
+  jmp y-- wait_esc [READ_AFTER_SEND_DELAY]
 push_and_wrap:
   push noblock
   jmp maybe_pull
