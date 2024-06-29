@@ -23,7 +23,7 @@
 .define READ_AFTER_SEND_CYCLES 360 // 360 = 30 * 12
 .define READ_AFTER_SEND_DELAY (30 - 1) // 29 + istruction exeuction time = 30
 .define READ_AFTER_SEND_DELAY_TIMES 12
-.define RECEIVED_PAYLOAD_LENGTH 21 // ERPM GCR returned length
+.define RECEIVED_PAYLOAD_LENGTH 20 // ERPM GCR returned length
 
 init:
   ; grab MIN_THROTTLE  value from fifo and store it in scratch register
@@ -72,16 +72,21 @@ push_and_wrap:
 
 static inline void bidir_dshot_encoder_program_init(PIO pio, uint sm, uint offset, uint pin) {
     pio_sm_config c = dshot_encoder_program_get_default_config(offset);
-
+    sm_config_set_out_pins(&c, pin, 1);
     sm_config_set_set_pins(&c, pin, 1);
-    pio_gpio_init(pio, pin);
+    sm_config_set_in_pins(&c, pin);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
 
+    gpio_pull_up(pin);
+    pio_gpio_init(pio, pin);
+
     sm_config_set_out_shift(&c, false, false, 32);
+    sm_config_set_in_shift(&c, false, false, 32);
 
     double clocks_per_us = clock_get_hz(clk_sys) / 1000000;
     // 3.333us per bit for dshot300
     sm_config_set_clkdiv(&c, 3.333 / dshot_encoder_BIT_PERIOD * clocks_per_us);
+
 
     pio_sm_init(pio, sm, offset, &c);
 

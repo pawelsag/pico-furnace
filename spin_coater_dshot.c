@@ -1,4 +1,5 @@
 #include "spin_coater.h"
+#include "stdio.h"
 
 #include "spin_coater_dshot.h"
 
@@ -149,9 +150,11 @@ dshot_recv_telemetry()
   // so at most there can be all 4 old values
   // throw old values and read new one
   for(int i =0 ; i < 4; i++)
-    pio_sm_get_blocking(pio, pio_sm);
+    printf("Ignoring: %u\n", pio_sm_get_blocking(pio, pio_sm));
 
-  return dshot_decode_eRPM_telemetry_value(pio_sm_get_blocking(pio, pio_sm));
+  uint32_t val = pio_sm_get_blocking(pio, pio_sm);
+  printf("RAW:%u - ", val);
+  return dshot_decode_eRPM_telemetry_value(val);
 }
 
 #endif
