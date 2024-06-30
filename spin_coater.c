@@ -172,7 +172,7 @@ init_spin_coater(furnace_context_t *ctx)
   // Set the PWM running
   pwm_set_enabled(slice_num, true);
 #elif CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT || CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
-    dshot_init(CONFIG_SPIN_COATER_ENGINE_CONTROL_PIN);
+    dshot_init(CONFIG_SPIN_COATER_ENGINE_CONTROL_PIN, CONFIG_SPIN_COATER_ENGINE_CONTROL_PIN_REVERSED);
     dshot_send_command(SPIN_COATER_MIN_THROTTLE_COMMAND);
 #endif
 

@@ -21,9 +21,9 @@
 // 641 + 720 + 672 == 2033  
 // We need wait about 30us before reading the value
 // however, experimentally my uc need 34 us
-.define READ_AFTER_SEND_CYCLES 408 // 408 = 30 * 13 + 18
-.define READ_AFTER_SEND_DELAY (30 - 1) // 29 + istruction exeuction time = 30
-.define READ_AFTER_SEND_DELAY_TIMES 13
+.define READ_AFTER_SEND_CYCLES 408 // 408 = 30 * 14 + 18
+.define READ_AFTER_SEND_DELAY (14) // 30*14 = 420
+.define READ_AFTER_SEND_DELAY_TIMES 30
 .define READ_AFTER_SEND_DELAY_REMINDER (18 - 7 - 1) // -1 required by instruction
 .define RECEIVED_PAYLOAD_LENGTH 20 // ERPM GCR returned length
 
@@ -56,10 +56,11 @@ receive_frame:
   set pindirs, 0 ; set pin as input
   set y, READ_AFTER_SEND_DELAY_TIMES
 wait_for_frame: ; using wait for pin signal state instruction is risky there. Sometimes signal is not send by ESC, and this might lead to code block.
+  jmp pin receive_telemetry_init [READ_AFTER_SEND_DELAY/2] ;reversed_input_pin is used here that is inverted by not gate before going on uC pin
+  jmp pin receive_telemetry_init [READ_AFTER_SEND_DELAY/2] ;reversed_input_pin is used here that is inverted by not gate before going on uC pin
   jmp y-- wait_for_frame [READ_AFTER_SEND_DELAY]
-  nop [READ_AFTER_SEND_DELAY_REMINDER]
+receive_telemetry_init:
   set y, RECEIVED_PAYLOAD_LENGTH
-  nop [10] ; delay few bits to read stabilized ESC signal
 receive_telemetry:
   in pins, 1 ; read frame once frame become stable
   jmp y-- receive_telemetry [30] ; receive another bit after 2.66ns 30 + 1 + 1 == 32
@@ -75,15 +76,19 @@ push_and_wrap:
 % c-sdk {
 #include "hardware/clocks.h"
 
-static inline void bidir_dshot_encoder_program_init(PIO pio, uint sm, uint offset, uint pin) {
+static inline void bidir_dshot_encoder_program_init(PIO pio, uint sm, uint offset, uint pin, uint reversed_input_pin) {
     pio_sm_config c = dshot_encoder_program_get_default_config(offset);
     sm_config_set_out_pins(&c, pin, 1);
     sm_config_set_set_pins(&c, pin, 1);
     sm_config_set_in_pins(&c, pin);
+    sm_config_set_jmp_pin(&c, reversed_input_pin);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, reversed_input_pin, 1, false);
 
     gpio_pull_up(pin);
     pio_gpio_init(pio, pin);
+    gpio_pull_up(reversed_input_pin);
+    pio_gpio_init(pio, reversed_input_pin);
 
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_in_shift(&c, false, false, 32);

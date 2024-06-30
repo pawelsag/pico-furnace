@@ -12,7 +12,7 @@ static int pio_sm = -1;
 #if  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_DSHOT
 
 bool
-dshot_init(uint16_t dshot_gpio)
+dshot_init(uint16_t dshot_gpio, uint16_t dshot_gpio_reversed)
 {
   uint pio_offset = pio_add_program(pio, &dshot_encoder_program);
   pio_sm = pio_claim_unused_sm(pio, true);
@@ -41,7 +41,7 @@ dshot_send_command(uint16_t c)
 #elif  CONFIG_SPIN_COATER == CONFIG_SPIN_COATER_BIDIR_DSHOT
 
 bool
-dshot_init(uint16_t dshot_gpio)
+dshot_init(uint16_t dshot_gpio, uint16_t dshot_gpio_reversed)
 {
   uint pio_offset = pio_add_program(pio, &dshot_encoder_program);
   pio_sm = pio_claim_unused_sm(pio, true);
@@ -51,7 +51,7 @@ dshot_init(uint16_t dshot_gpio)
     return false;
   }
 
-  bidir_dshot_encoder_program_init(pio, pio_sm, pio_offset, dshot_gpio);
+  bidir_dshot_encoder_program_init(pio, pio_sm, pio_offset, dshot_gpio, dshot_gpio_reversed);
   return true;
 }
 

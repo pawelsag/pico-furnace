@@ -14,7 +14,7 @@
    of spining up the engine in automatic mode with timer to skip unsued values */
 #define DSHOT_HEAVY_LOADED_IDLE_DUTY 100
 
-bool dshot_init(uint16_t dshot_gpio);
+bool dshot_init(uint16_t dshot_gpio, uint16_t dshot_gpio_reversed);
 
 void dshot_send_command(uint16_t c);
 
