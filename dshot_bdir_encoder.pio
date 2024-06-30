@@ -53,7 +53,7 @@ do_zero:
   set pins, 1 [ZERO_LOW_DELAY]
   jmp transmit_or_receive
 receive_frame:
-  set pindirs, 0
+  set pindirs, 0 ; set pin as input
   set y, READ_AFTER_SEND_DELAY_TIMES
 wait_for_frame: ; using wait for pin signal state instruction is risky there. Sometimes signal is not send by ESC, and this might lead to code block.
   jmp y-- wait_for_frame [READ_AFTER_SEND_DELAY]
@@ -69,7 +69,7 @@ wait_esc:
   jmp y-- wait_esc [READ_AFTER_SEND_DELAY]
 push_and_wrap:
   push noblock
-  set pindirs, 1
+  set pindirs, 1 ; set pin as output
   jmp maybe_pull
 
 % c-sdk {

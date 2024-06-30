@@ -68,78 +68,42 @@ dshot_send_command(uint16_t c)
   pio_sm_put_blocking(pio, pio_sm, c);
 }
 
-uint8_t decode_GCR_nibble(uint8_t gcr) {
-  switch(gcr)	{
-    case 0x19:
-      return 0x0;
-    case 0x1B:
-      return 0x1;
-    case 0x12:
-      return 0x2;
-    case 0x13:
-      return 0x3;
-    case 0x1D:
-      return 0x4;
-    case 0x15:
-      return 0x5;
-    case 0x16:
-      return 0x6;
-    case 0x17:
-      return 0x7;
-    case 0x1A:
-      return 0x8;
-    case 0x09:
-      return 0x9;
-    case 0x0A:
-      return 0xA;
-    case 0x0B:
-      return 0xB;
-    case 0x1E:
-      return 0xC;
-    case 0x0D:
-      return 0xD;
-    case 0x0E:
-      return 0xE;
-    case 0x0F:
-      return 0xF;
-
-    default:
-      return 0xFF;
-  }
-}
-
 #define GET_GCR_CHUNK(GCR, CHUNK_NUM) (GCR >> (5*CHUNK_NUM) & 0x1f)
-
+static
 uint8_t calc_crc(uint16_t value)
 {
   return (~(value ^ (value >> 4) ^ (value >> 8))) & 0x0F;
 }
+
+static const uint32_t decodeGCR[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 10, 11, 0, 13, 14, 15,
+    0, 0, 2, 3, 0, 5, 6, 7, 0, 0, 8, 1, 0, 4, 12, 0 };
 
 static uint32_t dshot_decode_eRPM_telemetry_value(uint32_t value)
 {
   // first decode custom encoding from 21 bit value to 20 bit gcr code
   uint32_t gcr = (value ^ (value >> 1));
 
-  uint16_t raw_telemetry = 0x0;
   // returned telemetry 4x4bits is encoded as 20bit gcr encoded value 4 x 5bits
-  for(int i =0 ; i < 4; i++)
-    raw_telemetry |= (decode_GCR_nibble(GET_GCR_CHUNK(gcr, i)) << 4*i);
-  uint16_t obtained_crc = raw_telemetry & 0xff;
+  uint32_t raw_telemetry = decodeGCR[gcr & 0x1f];
+  raw_telemetry |= decodeGCR[(gcr >> 5) & 0x1f] << 4;
+  raw_telemetry |= decodeGCR[(gcr >> 10) & 0x1f] << 8;
+  raw_telemetry |= decodeGCR[(gcr >> 15) & 0x1f] << 12;
+
+  uint16_t obtained_crc = raw_telemetry & 0xf;
   uint16_t encoded_erpm = raw_telemetry >> 4;
 
   if(calc_crc(encoded_erpm) != obtained_crc)
     return 0;
 
   // Currecntly handle only eRPM packets
-  if((encoded_erpm & 0x100) == 0) 
+  if(encoded_erpm  == 0x0fff)
     return 0;
 
-  uint8_t exponent = (encoded_erpm >> 9);
-  uint8_t base = (encoded_erpm & 0x1ff);
-  uint32_t erpm_decoded = base << exponent;
-  const int number_of_poles = 14/2;
+  uint32_t erpm_decoded = (encoded_erpm & 0x000001ff) << ((encoded_erpm & 0xfffffe00) >> 9);
+  const int number_of_poles = 14;
 
-  return ((double)(MICROSECONDS_PER_MINUTE))/(erpm_decoded/number_of_poles);
+  return MICROSECONDS_PER_MINUTE/(erpm_decoded*number_of_poles/2.0);
 }
 
 // Currectly only erpm is supported
