@@ -20,9 +20,11 @@
 // 21 bits * 32 cycles = 672
 // 641 + 720 + 672 == 2033  
 // We need wait about 30us before reading the value
-.define READ_AFTER_SEND_CYCLES 360 // 360 = 30 * 12
+// however, experimentally my uc need 34 us
+.define READ_AFTER_SEND_CYCLES 408 // 408 = 30 * 13 + 18
 .define READ_AFTER_SEND_DELAY (30 - 1) // 29 + istruction exeuction time = 30
-.define READ_AFTER_SEND_DELAY_TIMES 12
+.define READ_AFTER_SEND_DELAY_TIMES 13
+.define READ_AFTER_SEND_DELAY_REMINDER (18 - 1) // -1 required by instruction
 .define RECEIVED_PAYLOAD_LENGTH 20 // ERPM GCR returned length
 
 init:
@@ -51,11 +53,13 @@ do_zero:
   set pins, 1 [ZERO_LOW_DELAY]
   jmp transmit_or_receive
 receive_frame:
+  set pindirs, 0
   set y, READ_AFTER_SEND_DELAY_TIMES
-wait_for_frame:
+wait_for_frame: ; using wait for pin signal state instruction is risky there. Sometimes signal is not send by ESC, and this might lead to code block.
   jmp y-- wait_for_frame [READ_AFTER_SEND_DELAY]
+  nop [READ_AFTER_SEND_DELAY_REMINDER]
   set y, RECEIVED_PAYLOAD_LENGTH
-  nop [6] ; delay few bits to stabilize signal from ESC
+  nop [10] ; delay few bits to read stabilized ESC signal
 receive_telemetry:
   in pins, 1 ; read frame once frame become stable
   jmp y-- receive_telemetry [30] ; receive another bit after 2.66ns 30 + 1 + 1 == 32
@@ -65,6 +69,7 @@ wait_esc:
   jmp y-- wait_esc [READ_AFTER_SEND_DELAY]
 push_and_wrap:
   push noblock
+  set pindirs, 1
   jmp maybe_pull
 
 % c-sdk {

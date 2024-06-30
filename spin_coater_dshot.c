@@ -139,7 +139,7 @@ static uint32_t dshot_decode_eRPM_telemetry_value(uint32_t value)
   uint32_t erpm_decoded = base << exponent;
   const int number_of_poles = 14/2;
 
-  return MICROSECONDS_PER_MINUTE/(erpm_decoded/number_of_poles);
+  return ((double)(MICROSECONDS_PER_MINUTE))/(erpm_decoded/number_of_poles);
 }
 
 // Currectly only erpm is supported
