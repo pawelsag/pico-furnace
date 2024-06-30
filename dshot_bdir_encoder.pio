@@ -24,7 +24,7 @@
 .define READ_AFTER_SEND_CYCLES 408 // 408 = 30 * 13 + 18
 .define READ_AFTER_SEND_DELAY (30 - 1) // 29 + istruction exeuction time = 30
 .define READ_AFTER_SEND_DELAY_TIMES 13
-.define READ_AFTER_SEND_DELAY_REMINDER (18 - 1) // -1 required by instruction
+.define READ_AFTER_SEND_DELAY_REMINDER (18 - 7 - 1) // -1 required by instruction
 .define RECEIVED_PAYLOAD_LENGTH 20 // ERPM GCR returned length
 
 init:
