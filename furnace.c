@@ -178,6 +178,10 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
       const size_t msg_len = sizeof(msg)-1;
       feedback(msg, msg_len);
     }
+  } else if (strncmp(buffer, "max_pwm\n", 8) == 0) {
+      char msg[MAX_PWM_FMT_SIZE];
+      const size_t msg_len = snprintf(msg, sizeof(msg), MAX_PWM_STATUS_FMT, ctx->ceiling_pwm);
+      feedback(msg, msg_len);
   } else if (strncmp(buffer, "pwm\n", 4) == 0) {
       char msg[16];
       const size_t msg_len = snprintf(msg, sizeof(msg), "pwm = %d\r\n", ctx->pwm_level);
@@ -247,6 +251,8 @@ command_handler(furnace_context_t* ctx, uint8_t* buffer, void (*feedback)(const 
                         "reboot            \t\t reboot device\n"
                         "pwm <0;50>        \t\t sets pwm\n"
                         "pwm               \t\t prints current pwm level\n"
+                        "max_pwm <0;50>    \t\t sets max pwm level.\n"
+                        "                  \t\t\t Device will never exceed this pwm value\n"
 #if CONFIG_THERMO && CONFIG_AUTO == CONFIG_AUTO_PILOT
                         "temp <0;" STR(MAX_TEMP) ">     \t\t sets wanted temperature\n"
                         "temp              \t\t shows current wanted temperature\n"
